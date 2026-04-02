@@ -1,0 +1,85 @@
+# Instruction-tuning prompt templates
+# Used to format training data for instruction-following fine-tuning.
+
+name: "instruct_tuning"
+description: "Standard instruction-tuning format with optional input field"
+version: "1.0"
+
+templates:
+
+  # Alpaca-style instruction format
+  alpaca:
+    description: "Stanford Alpaca instruction format"
+    with_input: |
+      Below is an instruction that describes a task, paired with an input that provides further context. Write a response that appropriately completes the request.
+
+      ### Instruction:
+      {instruction}
+
+      ### Input:
+      {input}
+
+      ### Response:
+      {output}
+    without_input: |
+      Below is an instruction that describes a task. Write a response that appropriately completes the request.
+
+      ### Instruction:
+      {instruction}
+
+      ### Response:
+      {output}
+
+  # ChatML format (used by many modern models)
+  chatml:
+    description: "ChatML format for instruct-tuned models"
+    template: |
+      <|im_start|>system
+      {system_prompt}<|im_end|>
+      <|im_start|>user
+      {instruction}<|im_end|>
+      <|im_start|>assistant
+      {output}<|im_end|>
+    default_system_prompt: "You are a helpful assistant."
+
+  # Llama-3 instruct format
+  llama3:
+    description: "Meta Llama 3 instruction format"
+    template: |
+      <|begin_of_text|><|start_header_id|>system<|end_header_id|>
+
+      {system_prompt}<|eot_id|><|start_header_id|>user<|end_header_id|>
+
+      {instruction}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+
+      {output}<|eot_id|>
+    default_system_prompt: "You are a helpful, respectful, and honest assistant."
+
+  # Mistral/Mixtral instruct format
+  mistral:
+    description: "Mistral instruct format"
+    template: |
+      [INST] {instruction} [/INST] {output}
+    with_system: |
+      [INST] <<SYS>>
+      {system_prompt}
+      <</SYS>>
+
+      {instruction} [/INST] {output}
+
+  # Zephyr/Gemma format
+  zephyr:
+    description: "Zephyr chat template"
+    template: |
+      <|system|>
+      {system_prompt}</s>
+      <|user|>
+      {instruction}</s>
+      <|assistant|>
+      {output}</s>
+    default_system_prompt: "You are a friendly and helpful assistant."
+
+  # Plain completion (no special formatting)
+  plain:
+    description: "Raw text completion — no formatting applied"
+    template: "{text}"

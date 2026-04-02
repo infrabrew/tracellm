@@ -1,0 +1,51 @@
+# TraceLLM — CUDA GPU build with full training support
+#
+# Build:
+#   docker build -t tracellm:gpu -f docker/Dockerfile.gpu .
+#
+# Run:
+#   docker run --gpus all -p 8400:8400 -v ~/.tracellm:/root/.tracellm tracellm:gpu
+
+FROM nvidia/cuda:12.4.1-devel-ubuntu22.04 AS builder
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.11 python3.11-dev python3-pip python3.11-venv \
+    build-essential git ninja-build && \
+    ln -sf /usr/bin/python3.11 /usr/bin/python && \
+    ln -sf /usr/bin/python3.11 /usr/bin/python3 && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+COPY pyproject.toml .
+COPY src/ src/
+
+RUN pip install --no-cache-dir --prefix=/install ".[all]"
+
+# ── Runtime ──────────────────────────────────────────────────────────────────
+FROM nvidia/cuda:12.4.1-runtime-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.11 libgomp1 && \
+    ln -sf /usr/bin/python3.11 /usr/bin/python && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /install /usr/local
+
+WORKDIR /app
+COPY config/ config/
+COPY prompts/ prompts/
+
+RUN mkdir -p /root/.tracellm/models /root/.tracellm/checkpoints /root/.tracellm/logs
+
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
+
+EXPOSE 8400
+
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+    CMD python -c "import httpx; httpx.get('http://localhost:8400/health')" || exit 1
+
+ENTRYPOINT ["tracellm"]
+CMD ["serve"]

@@ -1,0 +1,103 @@
+# Code generation training templates
+# Used to format code training data for fine-tuning code-capable models.
+
+name: "code_generation"
+description: "Templates for training code generation and code understanding"
+version: "1.0"
+
+templates:
+
+  # Function completion
+  function_completion:
+    description: "Given a docstring/signature, generate the function body"
+    template: |
+      ### Task: Complete the following function
+
+      ```{language}
+      {signature}
+      ```
+
+      ### Solution:
+
+      ```{language}
+      {solution}
+      ```
+
+  # Code explanation
+  code_explanation:
+    description: "Explain what a code snippet does"
+    template: |
+      ### Code:
+      ```{language}
+      {code}
+      ```
+
+      ### Explanation:
+      {explanation}
+
+  # Bug fixing
+  bug_fix:
+    description: "Identify and fix bugs in code"
+    template: |
+      ### Buggy Code:
+      ```{language}
+      {buggy_code}
+      ```
+
+      ### Bug Description:
+      {bug_description}
+
+      ### Fixed Code:
+      ```{language}
+      {fixed_code}
+      ```
+
+  # Code review
+  code_review:
+    description: "Review code and suggest improvements"
+    template: |
+      ### Code to Review:
+      ```{language}
+      {code}
+      ```
+
+      ### Review:
+      {review}
+
+  # File-level code (used for code folder training)
+  file_context:
+    description: "Full file with path context — used by code folder loader"
+    template: |
+      # File: {file_path}
+      # Language: {language}
+
+      {content}
+
+  # Multi-file context
+  repo_context:
+    description: "Multiple related files for repo-level understanding"
+    template: |
+      The following files are part of the same project:
+
+      {files}
+
+      ### Task:
+      {task}
+
+      ### Response:
+      {response}
+
+  # Instruction-to-code
+  instruction_to_code:
+    description: "Natural language instruction to code"
+    template: |
+      ### Instruction:
+      {instruction}
+
+      ### Requirements:
+      {requirements}
+
+      ### Code:
+      ```{language}
+      {code}
+      ```

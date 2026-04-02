@@ -1,0 +1,51 @@
+# TraceLLM — Docker Compose
+#
+# CPU:  docker compose -f docker/docker-compose.yml up tracellm
+# GPU:  docker compose -f docker/docker-compose.yml --profile gpu up tracellm-gpu
+
+services:
+  tracellm:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8400:8400"
+    volumes:
+      - tracellm-models:/root/.tracellm/models
+      - tracellm-checkpoints:/root/.tracellm/checkpoints
+      - tracellm-logs:/root/.tracellm/logs
+      - ../config:/app/config:ro
+      - ../prompts:/app/prompts:ro
+    environment:
+      - TRACELLM_LOGGING__LEVEL=info
+    restart: unless-stopped
+
+  tracellm-gpu:
+    profiles: ["gpu"]
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.gpu
+    ports:
+      - "8400:8400"
+    volumes:
+      - tracellm-models:/root/.tracellm/models
+      - tracellm-checkpoints:/root/.tracellm/checkpoints
+      - tracellm-logs:/root/.tracellm/logs
+      - ../config:/app/config:ro
+      - ../prompts:/app/prompts:ro
+    environment:
+      - TRACELLM_LOGGING__LEVEL=info
+      - NVIDIA_VISIBLE_DEVICES=all
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+
+volumes:
+  tracellm-models:
+  tracellm-checkpoints:
+  tracellm-logs:

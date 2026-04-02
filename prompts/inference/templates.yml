@@ -1,0 +1,119 @@
+# Inference prompt templates — structured prompting patterns.
+
+name: "inference_templates"
+description: "Reusable prompt templates for structured generation tasks"
+version: "1.0"
+
+templates:
+
+  # Summarization
+  summarize:
+    description: "Summarize text to a target length"
+    template: |
+      Summarize the following text in {length} sentences. Focus on the key points.
+
+      Text:
+      {text}
+
+      Summary:
+
+  # Translation
+  translate:
+    description: "Translate text between languages"
+    template: |
+      Translate the following text from {source_language} to {target_language}.
+      Maintain the original tone and meaning.
+
+      Text:
+      {text}
+
+      Translation:
+
+  # Extraction
+  extract_json:
+    description: "Extract structured data from unstructured text"
+    template: |
+      Extract the following fields from the text below and return valid JSON:
+
+      Fields: {fields}
+
+      Text:
+      {text}
+
+      JSON:
+
+  # Classification
+  classify:
+    description: "Classify text into categories"
+    template: |
+      Classify the following text into one of these categories: {categories}
+
+      Text:
+      {text}
+
+      Category:
+
+  # Q&A with context
+  qa_context:
+    description: "Answer questions based on provided context"
+    template: |
+      Answer the question based only on the provided context. If the answer
+      is not in the context, say "I cannot find this information in the
+      provided context."
+
+      Context:
+      {context}
+
+      Question: {question}
+
+      Answer:
+
+  # Code generation
+  code_gen:
+    description: "Generate code from a description"
+    template: |
+      Write {language} code that does the following:
+
+      {description}
+
+      Requirements:
+      {requirements}
+
+      ```{language}
+
+  # Code review
+  code_review:
+    description: "Review code for issues and improvements"
+    template: |
+      Review the following {language} code. Identify:
+      1. Bugs or potential errors
+      2. Security vulnerabilities
+      3. Performance issues
+      4. Style/readability improvements
+
+      ```{language}
+      {code}
+      ```
+
+      Review:
+
+  # Chain of thought
+  cot:
+    description: "Force step-by-step reasoning"
+    template: |
+      {question}
+
+      Let's work through this step by step:
+
+  # Few-shot
+  few_shot:
+    description: "Few-shot prompting with examples"
+    template: |
+      Here are some examples:
+
+      {examples}
+
+      Now, following the same pattern:
+
+      Input: {input}
+      Output:

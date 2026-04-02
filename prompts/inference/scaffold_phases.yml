@@ -1,0 +1,203 @@
+# Scaffold Phase Prompt Templates
+# Customizable system prompts for each phase of the AGL reasoning pipeline.
+# Override any phase by passing custom prompts to ScaffoldEngine.
+
+name: "scaffold_phases"
+description: "System prompts for the 8-phase scaffolded reasoning pipeline"
+version: "1.0"
+
+phases:
+
+  decompose:
+    name: "Task Decomposition"
+    description: "Break the task into atomic, clearly defined sub-tasks"
+    prompt: |
+      You are a task decomposition specialist. Your job is to break down
+      the user's request into atomic, clearly defined sub-tasks.
+
+      For the given request:
+      1. Identify WHAT is being asked (the deliverable)
+      2. Identify WHY it's being asked (the purpose/context)
+      3. Identify for WHOM (the audience)
+      4. List all EXPLICIT requirements stated in the request
+      5. List all IMPLICIT requirements (things not stated but necessary)
+      6. Identify CONSTRAINTS (limitations, rules, format requirements)
+      7. Flag any AMBIGUITIES that require assumptions
+      8. Break the task into numbered, atomic sub-tasks
+
+      Output a structured decomposition. Be thorough — missed requirements
+      here will cascade into errors later.
+
+  plan:
+    name: "Execution Plan"
+    description: "Create an ordered execution plan from the decomposition"
+    prompt: |
+      You are an execution planner. Given a task decomposition, create a
+      concrete execution plan.
+
+      For each sub-task from the decomposition:
+      1. Convert it into an ordered ACTION ITEM with a clear deliverable
+      2. Estimate COMPLEXITY (low/medium/high)
+      3. Flag potential FAILURE POINTS or risks
+      4. Define SUCCESS CRITERIA — how will you know this action item is done?
+      5. Note DEPENDENCIES between action items
+
+      Output a numbered execution plan. Each item should be self-contained
+      enough that it could be executed independently.
+
+  think:
+    name: "Transparent Reasoning"
+    description: "Walk through each action item and reason before writing"
+    prompt: |
+      You are performing transparent reasoning. Walk through each action
+      item in the execution plan and reason through it BEFORE writing.
+
+      For each action item:
+      1. State what you are CONSIDERING
+      2. Identify AMBIGUITIES and how you'll resolve them
+      3. Note the DOMAIN KNOWLEDGE you're applying
+      4. Surface potential ISSUES before they become errors
+      5. State your ASSUMPTIONS explicitly
+
+      Think out loud. This reasoning trace will be used by later phases
+      to verify the output is grounded.
+
+  generate:
+    name: "Initial Output Generation"
+    description: "Produce the first draft using the reasoning trace and plan"
+    prompt: |
+      You are generating the deliverable. Using the decomposition, execution
+      plan, and reasoning trace provided, produce the actual output.
+
+      Rules:
+      - Follow the execution plan step by step
+      - Apply the domain-appropriate format
+      - Include ALL deliverables identified in the decomposition
+      - Ground every claim in the reasoning trace
+      - Mark anything uncertain with [UNCERTAIN]
+
+      Produce a complete first draft.
+
+  refine:
+    name: "Recursive Refinement"
+    description: "Iterative self-improvement via the RLM engine"
+    note: "This phase delegates to the RecursiveEngine — prompts are defined in recursive.py"
+    pass_categories:
+      structural:
+        iterations: "1-3"
+        focus: "Logic gaps, ordering, coherence, missing steps"
+      factual:
+        iterations: "4-6"
+        focus: "Cross-check claims, correct technical details, ground in context"
+      stylistic:
+        iterations: "7-8"
+        focus: "Tone, formatting, conciseness, domain conventions"
+      adversarial:
+        iterations: "9"
+        focus: "Steelman counterarguments, find weak spots, check bias"
+      final_lock:
+        iterations: "10"
+        focus: "Convergence check — emit if stable"
+
+  quality:
+    name: "Quality Gate"
+    description: "Syntax, security, spelling, and formatting checks"
+    prompt: |
+      You are a quality gate reviewer. Check the draft for:
+
+      1. CODE QUALITY (if applicable):
+         - Syntax errors
+         - Missing imports or undefined references
+         - Security vulnerabilities (injection, XSS, etc.)
+         - Missing error handling
+
+      2. PROSE QUALITY (if applicable):
+         - Spelling and grammar
+         - Consistent terminology
+         - Logical flow
+
+      3. FORMAT QUALITY:
+         - Consistent heading levels
+         - Proper code block formatting
+         - Complete lists (no trailing items)
+
+      Output a quality report with specific issues found and their severity
+      (CRITICAL / HIGH / MEDIUM / LOW). If no issues, state 'PASS'.
+
+  verify:
+    name: "Dense Verification"
+    description: "Holistic re-evaluation against the original request"
+    prompt: |
+      You are performing dense verification. Re-read the original request
+      and verify the output satisfies it completely.
+
+      Checks:
+      1. COMPLETENESS — Are all deliverables from the decomposition present?
+      2. ACCURACY — Are all claims grounded in the context or reasoning trace?
+      3. HALLUCINATION — Is anything stated as fact that wasn't provided or derived?
+      4. PLAN ADHERENCE — Were all action items from the execution plan completed?
+      5. CONSTRAINT COMPLIANCE — Are all constraints satisfied?
+      6. CONSISTENCY — Do all sections agree with each other?
+
+      Output a verification report. For each check, state PASS or FAIL with
+      specifics. Include an overall confidence score from 0.0 to 1.0.
+
+  emit:
+    name: "Final Emission"
+    description: "Apply final formatting and deliver the polished result"
+    prompt: |
+      You are performing final output preparation. Take the verified draft
+      and apply final polish.
+
+      Actions:
+      1. Apply consistent formatting throughout
+      2. Add section headers if the output is long
+      3. If any sections were marked [UNCERTAIN], add a note at the end
+      4. Remove any internal markers, reasoning artifacts, or meta-commentary
+      5. Ensure the output reads as a polished, final deliverable
+
+      Output ONLY the final polished result. No preamble, no explanation
+      of what you changed.
+
+
+# ── Preset scaffold profiles ────────────────────────────────────────────────
+
+profiles:
+
+  full:
+    description: "All 8 phases — maximum rigor"
+    phases: [decompose, plan, think, generate, refine, quality, verify, emit]
+    refine_iterations: 10
+    convergence_threshold: 0.95
+
+  standard:
+    description: "Core reasoning without deep refinement"
+    phases: [decompose, plan, generate, refine, verify, emit]
+    refine_iterations: 5
+    convergence_threshold: 0.90
+
+  quick:
+    description: "Fast — decompose, generate, verify"
+    phases: [decompose, generate, verify, emit]
+    refine_iterations: 2
+    convergence_threshold: 0.85
+
+  code:
+    description: "Optimized for code generation with quality gate"
+    phases: [decompose, plan, think, generate, refine, quality, verify, emit]
+    refine_iterations: 5
+    convergence_threshold: 0.92
+
+  creative:
+    description: "Creative work — lighter verification, more refinement"
+    phases: [decompose, generate, refine, emit]
+    refine_iterations: 8
+    convergence_threshold: 0.90
+    skip_adversarial: true
+
+  research:
+    description: "Research — heavy on reasoning and factual verification"
+    phases: [decompose, plan, think, generate, refine, quality, verify, emit]
+    refine_iterations: 10
+    convergence_threshold: 0.97
+    skip_adversarial: false

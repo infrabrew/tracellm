@@ -1,0 +1,66 @@
+# Chat alignment training templates
+# Used for RLHF-style preference data and chat fine-tuning.
+
+name: "chat_alignment"
+description: "Templates for chat alignment, preference training, and DPO"
+version: "1.0"
+
+templates:
+
+  # DPO (Direct Preference Optimization) pair format
+  dpo_pair:
+    description: "Chosen/rejected pair for DPO training"
+    template:
+      prompt: "{prompt}"
+      chosen: "{chosen_response}"
+      rejected: "{rejected_response}"
+
+  # Multi-turn conversation
+  multi_turn:
+    description: "Multi-turn conversation for supervised fine-tuning"
+    template: |
+      <|system|>
+      {system_prompt}
+
+      {turns}
+
+    turn_format:
+      user: "<|user|>\n{content}\n"
+      assistant: "<|assistant|>\n{content}\n"
+
+  # Safety alignment
+  safety:
+    description: "Safety-focused training — model refuses harmful requests"
+    safe_response: |
+      <|system|>
+      You are a helpful, harmless, and honest assistant.
+      <|user|>
+      {harmful_request}
+      <|assistant|>
+      {safe_refusal}
+
+  # Helpfulness
+  helpful:
+    description: "Detailed, helpful responses to user queries"
+    template: |
+      <|system|>
+      You are a helpful assistant. Provide detailed, accurate, and actionable responses.
+      <|user|>
+      {question}
+      <|assistant|>
+      {detailed_response}
+
+  # Chain-of-thought
+  chain_of_thought:
+    description: "Reasoning-first responses for complex tasks"
+    template: |
+      <|system|>
+      When solving complex problems, think step by step before giving your final answer.
+      <|user|>
+      {problem}
+      <|assistant|>
+      Let me think through this step by step:
+
+      {reasoning}
+
+      **Answer:** {answer}

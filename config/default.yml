@@ -1,0 +1,94 @@
+# TraceLLM — Default configuration
+# Override per-model or per-task in CLI or API calls.
+
+server:
+  host: "0.0.0.0"
+  port: 8400
+  workers: 1
+  cors_origins: ["*"]
+  max_concurrent_requests: 64
+  request_timeout_seconds: 300
+
+models:
+  cache_dir: "~/.tracellm/models"
+  default_dtype: "auto"          # auto | float16 | bfloat16 | float32
+  default_device: "auto"         # auto | cuda | cpu | mps
+  max_loaded_models: 2           # evict LRU when exceeded
+  trust_remote_code: false
+
+inference:
+  max_tokens: 4096
+  temperature: 0.7
+  top_p: 0.9
+  top_k: 50
+  repetition_penalty: 1.1
+  stop_sequences: []
+  stream: true
+  batch_size: 1
+  kv_cache:
+    enabled: true
+    max_cache_size_gb: 4.0
+    eviction_policy: "lru"
+
+recursive:
+  max_iterations: 10               # max refinement passes per generation
+  convergence_threshold: 0.95      # stop when output similarity >= this
+  skip_adversarial: false          # skip the devil's advocate pass
+
+scaffold:
+  default_profile: "standard"      # full | standard | quick | code | creative | research
+  refine_iterations: 5             # recursive passes within the refine phase
+  refine_convergence: 0.90         # convergence threshold for refine phase
+  verify_retries: 2                # retry verification on low confidence
+  show_reasoning: false            # include decomposition/plan/trace in output
+  skip_adversarial: false
+
+training:
+  output_dir: "~/.tracellm/checkpoints"
+  logging_dir: "~/.tracellm/logs"
+  default_optimizer: "adamw"     # adamw | muon | deepspeed
+  default_scheduler: "cosine"
+  gradient_checkpointing: true
+  mixed_precision: "bf16"        # no | fp16 | bf16
+  max_grad_norm: 1.0
+  seed: 42
+  dataloader_workers: 4
+
+  finetune_defaults:
+    method: "lora"               # lora | qlora | full
+    lora:
+      r: 16
+      alpha: 32
+      dropout: 0.05
+      target_modules: "auto"
+    qlora:
+      bits: 4
+      quant_type: "nf4"
+      double_quant: true
+
+  deepspeed:
+    enabled: false
+    config: "config/training_profiles/deepspeed_z2.json"
+
+batch:
+  max_concurrency: 4               # max parallel generations in batch mode
+  default_max_tokens: 4096
+
+benchmark:
+  default_max_tokens: 128          # tokens per benchmark run
+  default_num_runs: 3              # timed runs per prompt category
+  warmup_runs: 1                   # untimed warmup runs
+
+rlhf:
+  dpo_beta: 0.1                    # DPO temperature parameter
+  dpo_loss_type: "sigmoid"         # sigmoid | hinge | ipo
+  ppo_kl_penalty: 0.2             # KL divergence penalty for PPO
+  default_learning_rate: 5e-7
+  use_lora: true
+  lora_r: 16
+  lora_alpha: 32
+
+logging:
+  level: "info"                  # debug | info | warning | error
+  file: "~/.tracellm/tracellm.log"
+  rich_console: true
